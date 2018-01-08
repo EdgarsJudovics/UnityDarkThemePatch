@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnityDarkThemePatch", "UnityDarkThemePatch\UnityDarkThemePatch.csproj", "{E51F2429-F174-4915-90BF-EBA58E4E9D22}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E51F2429-F174-4915-90BF-EBA58E4E9D22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E51F2429-F174-4915-90BF-EBA58E4E9D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E51F2429-F174-4915-90BF-EBA58E4E9D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E51F2429-F174-4915-90BF-EBA58E4E9D22}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {97BBB4B9-5B11-444C-BA80-F83DF85C4BB7}
+	EndGlobalSection
+EndGlobal
