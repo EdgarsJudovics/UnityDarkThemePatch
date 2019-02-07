@@ -11,7 +11,7 @@ namespace UnityDarkThemePatch
         public byte PatchableByteValue { get; private set; }
 
         // region to find, 0x00 is any byte.
-        public readonly byte[] RegionBytes =
+        public readonly byte[] RegionBytes2017 =
         {
             0x40, 0x53,
             0x48, 0x83, 0xec, 0x20,
@@ -28,15 +28,52 @@ namespace UnityDarkThemePatch
             0x5b,
             0xc3,
         };
+        public readonly byte[] RegionBytes2018 =
+        {
+            0x75,
+            0x08,
+            0x33,
+            0xc0,
+            0x48,
+            0x83,
+            0xc4,
+            0x30,
+            0x5b,
+            0xc3,
+            0x8b,
+            0x03,
+            0x48,
+            0x83,
+            0xc4,
+            0x30
+        };
+
         // offset from start of region to the actual instruction
-        public readonly int JumpInstructionOffset = 16;
+        public readonly int JumpInstructionOffset2017 = 16;
+        public readonly int JumpInstructionOffset2018 = 0;
+
         public readonly byte DarkSkinByte = 0x74;
         public readonly byte LightSkinByte = 0x75;
 
         public void Init()
         {
             UnityExecutablePath = GetUnityExecutablePath();
-            PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes, JumpInstructionOffset);
+
+            var version = VersionChoice("Choose a version to patch");
+
+            if (version == 2017)
+            {
+                PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes2017, JumpInstructionOffset2017);
+            }
+            else if (version == 2018)
+            {
+                PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes2018, JumpInstructionOffset2018);
+            }
+            else
+            {
+                ExitOnInput("Please choose a right version", ConsoleColor.Red);
+            }
+
             PatchableByteValue = GetPatchableByteValue();
             if (PatchableByteValue == DarkSkinByte)
                 YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkinByte));
@@ -90,6 +127,24 @@ namespace UnityDarkThemePatch
                 }
             }
         }
+        public int VersionChoice(string message)
+        {
+            while (true)
+            {
+                Console.Write($"{message} [2017/2018]: ");
+                var answer = Console.ReadLine()?.ToLower();
+                if (string.IsNullOrWhiteSpace(answer))
+                    continue;
+                if (answer.StartsWith("2017"))
+                {
+                    return 2017;
+                }
+                if (answer.StartsWith("2018"))
+                {
+                    return 2018;
+                }
+            }
+        }
         #endregion
 
         #region UI WORK METHODS
@@ -126,7 +181,8 @@ namespace UnityDarkThemePatch
                 CreateFileBackup(UnityExecutablePath);
                 WriteByteToAddress(UnityExecutablePath, b, PatchableByteAddress);
                 WriteLine("Patch applied successfully", ConsoleColor.Green);
-                Init();
+                // Init();
+                Console.Read();
             }
             catch
             {
