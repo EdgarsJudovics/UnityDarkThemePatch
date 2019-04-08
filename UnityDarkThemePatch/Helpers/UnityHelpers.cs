@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace UnityDarkThemePatch.Helpers
 {
@@ -13,6 +15,25 @@ namespace UnityDarkThemePatch.Helpers
         public static string GetUnityPath()
         {
             return GetUnityPathFromArgs() ?? GetUnityPathFromLocalDir() ?? GetUnityPathFromRegistry();
+        }
+
+        /// <summary>
+        /// Attempts to find Unity.exe paths from the registry, followed by passed arguments, followed by the current directory.
+        /// </summary>
+        /// <returns>A collection of paths to Unity.exe.</returns>
+        public static IEnumerable<string> GetUnityPaths()
+        {
+            var argPaths = GetUnityPathsFromArgs();
+            var regPaths = GetUnityPathsFromRegistry();
+            var localPath = GetUnityPathFromLocalDir();
+            var result = argPaths.Concat(regPaths).ToList();
+
+            if (localPath != null)
+            {
+                result.Add(localPath);
+            }
+
+            return result.Distinct();
         }
 
         /// <summary>
@@ -46,6 +67,31 @@ namespace UnityDarkThemePatch.Helpers
         }
 
         /// <summary>
+        /// Attempts to find Unity.exe paths from registry.
+        /// </summary>
+        /// <returns>A collection of paths to Unity.exe.</returns>
+        public static IEnumerable<string> GetUnityPathsFromRegistry()
+        {
+            var uninstallRegKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
+            var paths = new List<string>();
+
+            using (var regKey = Registry.LocalMachine.OpenSubKey(uninstallRegKey))
+            {
+                foreach (var subKeyName in regKey.GetSubKeyNames())
+                    using (var subkey = regKey.OpenSubKey(subKeyName))
+                    {
+                        if (subkey.GetValue("DisplayName")?.ToString() == "Unity")
+                        {
+                            paths.Add(subkey.GetValue("DisplayIcon").ToString());
+                            break;
+                        }
+                    }
+            }
+
+            return paths.Where(p => p.EndsWith("Unity.exe"));
+        }
+
+        /// <summary>
         /// Attempts to find Unity.exe path from passed args
         /// </summary>
         /// <returns>Path to Unity.exe or null if none is found</returns>
@@ -58,6 +104,21 @@ namespace UnityDarkThemePatch.Helpers
                 return fileInfo.FullName;
             }
             return null;
+        }
+
+        /// <summary>
+        /// Attempts to find Unity.exe paths from passed args.
+        /// </summary>
+        /// <returns>A collection of paths to Unity.exe.</returns>
+        public static IEnumerable<string> GetUnityPathsFromArgs()
+        {
+            var args = Environment.GetCommandLineArgs().ToList();
+            return args.Select(a =>
+            {
+                if (string.IsNullOrWhiteSpace(a) || File.Exists(a)) { return null; }
+                var fileInfo = new FileInfo(args[1]);
+                return fileInfo.FullName;
+            }).Where(v => v != null && v.EndsWith("Unity.exe")).ToList();
         }
 
         /// <summary>
