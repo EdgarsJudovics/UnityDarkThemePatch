@@ -59,8 +59,7 @@ namespace UnityDarkThemePatch
                 UnityExecutables = GetUnityExecutablePath().Select(p => new UnityBinary(p));
                 bool quitRequested = false;
                 var choices = UnityExecutables.Select(e => new ConsoleChoice { ChoiceDescription = e.ExecutableVersionString, ChoiceAction = () => UnityExecutable = e }).ToList();
-                choices.Add(new ConsoleChoice { ChoiceDescription = "Quit", ChoiceAction = () => quitRequested = true });
-                ConsoleHelpers.MultipleChoice(choices);
+                ConsoleHelpers.MultipleChoice(choices, () => quitRequested = true);
                 if (quitRequested) { break; }
 
                 RegionBytes = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? RegionBytesVersionB : RegionBytesVersionA;

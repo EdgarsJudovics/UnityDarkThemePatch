@@ -85,7 +85,7 @@ namespace UnityDarkThemePatch.Helpers
         /// </summary>
         /// <param name="choices">An IEnumerable of ConsoleChoice objects.</param>
         /// <param name="message">An optional message to display before options are printed.</param>
-        public static void MultipleChoice(IEnumerable<ConsoleChoice> choices, string message = "Please select an option")
+        public static void MultipleChoice(IEnumerable<ConsoleChoice> choices, Action quitAction = null, string message = "Please select an option")
         {
             if (choices == null)
             {
@@ -101,8 +101,21 @@ namespace UnityDarkThemePatch.Helpers
                     .ToList()
                     .ForEach(c => Console.WriteLine($"{c.Index}: {c.Value.ChoiceDescription}"));
                 Console.WriteLine();
+                if (quitAction != null)
+                {
+                    Console.WriteLine("Q: Quit");
+                    Console.WriteLine();
+                }
 
-                bool validInt = int.TryParse(Regex.Replace(Console.ReadLine() ?? string.Empty, "[^.0-9]", ""), out int answer);
+                var input = Console.ReadLine();
+
+                if (input.ToLower().StartsWith("q") && quitAction != null)
+                {
+                    quitAction.Invoke();
+                    break;
+                }
+
+                bool validInt = int.TryParse(Regex.Replace(input ?? string.Empty, "[^.0-9]", ""), out int answer);
                 if (!validInt) { continue; }
 
                 var selectedChoice = choicesWithIndex.FirstOrDefault(c => c.Index == answer);
