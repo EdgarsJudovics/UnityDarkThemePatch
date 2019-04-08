@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityDarkThemePatch.Helpers;
 using UnityDarkThemePatch.Models;
 
@@ -6,8 +8,12 @@ namespace UnityDarkThemePatch
 {
     public class Patcher
     {
+        public IEnumerable<UnityBinary> UnityExecutables { get; private set; }
+
         public UnityBinary UnityExecutable { get; private set; }
+
         public long PatchableByteAddress { get; private set; }
+
         public byte PatchableByteValue { get; private set; }
 
         // region to find, 0x00 is any byte.
@@ -48,18 +54,27 @@ namespace UnityDarkThemePatch
 
         public void Init()
         {
-            UnityExecutable = new UnityBinary(GetUnityExecutablePath());
-            RegionBytes = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? RegionBytesVersionB : RegionBytesVersionA;
-            JumpInstructionOffset = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? JumpInstructionOffsetVersionB : JumpInstructionOffsetVersionA;
-            PatchableByteAddress = BinaryHelpers.FindJumpInstructionAddress(UnityExecutable.ExecutablePath, RegionBytes, JumpInstructionOffset);
-            PatchableByteValue = GetPatchableByteValue();
-            if (PatchableByteValue == DarkSkinByte)
+            while (true)
             {
-                ConsoleHelpers.YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkinByte));
-            }
-            else
-            {
-                ConsoleHelpers.YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkinByte));
+                UnityExecutables = GetUnityExecutablePath().Select(p => new UnityBinary(p));
+                bool quitRequested = false;
+                var choices = UnityExecutables.Select(e => new ConsoleChoice { ChoiceDescription = e.ExecutableVersionString, ChoiceAction = () => UnityExecutable = e }).ToList();
+                choices.Add(new ConsoleChoice { ChoiceDescription = "Quit", ChoiceAction = () => quitRequested = true });
+                ConsoleHelpers.MultipleChoice(choices);
+                if (quitRequested) { break; }
+
+                RegionBytes = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? RegionBytesVersionB : RegionBytesVersionA;
+                JumpInstructionOffset = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? JumpInstructionOffsetVersionB : JumpInstructionOffsetVersionA;
+                PatchableByteAddress = BinaryHelpers.FindJumpInstructionAddress(UnityExecutable.ExecutablePath, RegionBytes, JumpInstructionOffset);
+                PatchableByteValue = GetPatchableByteValue();
+                if (PatchableByteValue == DarkSkinByte)
+                {
+                    ConsoleHelpers.YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkinByte));
+                }
+                else
+                {
+                    ConsoleHelpers.YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkinByte));
+                }
             }
         }
 
@@ -69,16 +84,18 @@ namespace UnityDarkThemePatch
         /// Uses the UnityHelpers GetUnityPath method to find the path to the Unity executable, prints the output to the console and returns the result.
         /// </summary>
         /// <returns>The path to the Unity binary.</returns>
-        private string GetUnityExecutablePath()
+        private IEnumerable<string> GetUnityExecutablePath()
         {
-            var unityExecutablePath = UnityHelpers.GetUnityPath();
-            ConsoleHelpers.Write("Unity binary: ");
-            if (string.IsNullOrWhiteSpace(unityExecutablePath))
+            var unityExecutablePaths = UnityHelpers.GetUnityPaths();
+            ConsoleHelpers.Write("Unity binaries: ");
+            ConsoleHelpers.WriteLine();
+            if (unityExecutablePaths.Count() <= 0)
             {
                 ConsoleHelpers.ExitOnInput("Failed to find Unity editor binary", ConsoleColor.Red);
             }
-            ConsoleHelpers.WriteLine($"{unityExecutablePath}", ConsoleColor.Green);
-            return unityExecutablePath;
+            unityExecutablePaths.ToList().ForEach(p => ConsoleHelpers.WriteLine($"{p}", ConsoleColor.Green));
+            ConsoleHelpers.WriteLine();
+            return unityExecutablePaths;
         }
 
         /// <summary>

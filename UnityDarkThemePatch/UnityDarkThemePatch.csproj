@@ -36,6 +36,7 @@
     <Compile Include="Helpers\BinaryHelpers.cs" />
     <Compile Include="Helpers\ConsoleHelpers.cs" />
     <Compile Include="Helpers\FileHelpers.cs" />
+    <Compile Include="Models\ConsoleChoice.cs" />
     <Compile Include="Models\UnityBinary.cs" />
     <Compile Include="Models\UnityBinaryVersion.cs" />
     <Compile Include="Patcher.cs" />
