@@ -54,7 +54,8 @@ namespace UnityDarkThemePatch.Helpers
             var args = Environment.GetCommandLineArgs();
             if (args.Length > 1 && !string.IsNullOrWhiteSpace(args[1]) && File.Exists(args[1]))
             {
-                return args[1];
+                var fileInfo = new FileInfo(args[1]);
+                return fileInfo.FullName;
             }
             return null;
         }
