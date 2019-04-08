@@ -4,7 +4,6 @@ namespace UnityDarkThemePatch.Models
 {
     public enum UnityBinaryVersion
     {
-        UNKNOWN,
         #region Unity 3.x
         
         /// <summary>
@@ -1240,5 +1239,6 @@ namespace UnityDarkThemePatch.Models
         [Description("2018.3.11")]
         UNITY_2018_3_11,
         #endregion
+        UNKNOWN,
     };
 }
