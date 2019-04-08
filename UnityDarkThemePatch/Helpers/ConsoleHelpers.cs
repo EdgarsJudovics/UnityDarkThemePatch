@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+using UnityDarkThemePatch.Models;
 
 namespace UnityDarkThemePatch.Helpers
 {
@@ -60,7 +64,9 @@ namespace UnityDarkThemePatch.Helpers
                 Console.Write($"{message} [Yes/No]: ");
                 var answer = Console.ReadLine()?.ToLower();
                 if (string.IsNullOrWhiteSpace(answer))
+                {
                     continue;
+                }
                 if (answer.StartsWith("y"))
                 {
                     yes?.Invoke();
@@ -71,6 +77,39 @@ namespace UnityDarkThemePatch.Helpers
                     no?.Invoke();
                     break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// <para>Prompts the user for input, parsing a selection from the specified choices.</para>
+        /// </summary>
+        /// <param name="choices">An IEnumerable of ConsoleChoice objects.</param>
+        /// <param name="message">An optional message to display before options are printed.</param>
+        public static void MultipleChoice(IEnumerable<ConsoleChoice> choices, string message = "Please select an option")
+        {
+            if (choices == null)
+            {
+                throw new ArgumentNullException(nameof(choices));
+            }
+
+            var choicesWithIndex = choices.Select((c, i) => new { Index = i, Value = c });
+
+            while (true)
+            {
+                Console.WriteLine($"{message}: ");
+                choicesWithIndex
+                    .ToList()
+                    .ForEach(c => Console.WriteLine($"{c.Index}: {c.Value.ChoiceDescription}"));
+                Console.WriteLine();
+
+                bool validInt = int.TryParse(Regex.Replace(Console.ReadLine() ?? string.Empty, "[^.0-9]", ""), out int answer);
+                if (!validInt) { continue; }
+
+                var selectedChoice = choicesWithIndex.FirstOrDefault(c => c.Index == answer);
+                if (selectedChoice == null) { continue; }
+
+                selectedChoice.Value?.ChoiceAction?.Invoke();
+                break;
             }
         }
     }
