@@ -18,7 +18,7 @@ namespace UnityDarkThemePatch
 
         // region to find, 0x00 is any byte.
         //75 08 33 C0 48 83 C4 30  5B C3 8B 03 48 83 C4 30
-        public readonly byte[] RegionBytesVersionA =
+        private readonly byte[] RegionBytes_Pre2018_3 =
         {
             0x40, 0x53,
             0x48, 0x83, 0xec, 0x20,
@@ -36,21 +36,77 @@ namespace UnityDarkThemePatch
             0xc3,
         };
 
-        public readonly byte[] RegionBytesVersionB = 
+        private readonly byte[] RegionBytes_2018_3 = 
         {
             0x08,0x33, 0xc0, 0x48, 0x83, 0xc4, 0x30, 0x5b, 0xc3, 0x8b, 0x03, 0x48, 0x83, 0xc4, 0x30
         };
 
-        public byte[] RegionBytes;
+        private readonly byte[] RegionBytes_2019_0 =
+        {
+            0x04,0x33, 0xc0, 0xeb, 0x02, 0x8b, 0x07
+        };
+
+        private readonly byte[] RegionBytes_2019_2 =
+        {
+            0x15, 0x33, 0xc0, 0xeb, 0x13, 0x90
+        };
+
+        //private byte[] RegionBytes;
 
         // offset from start of region to the actual instruction
-        public int JumpInstructionOffset = -1;
+        //private int JumpInstructionOffset = -1;
 
-        public readonly int JumpInstructionOffsetVersionA = 16;
-        public readonly int JumpInstructionOffsetVersionB = -1;
+        private readonly int JumpInstructionOffset_Pre2018_3 = 16;
+        private readonly int JumpInstructionOffset_2018_3 = -1;
+        private readonly int JumpInstructionOffset_2019_0 = -1;
+        private readonly int JumpInstructionOffset_2019_2 = -1;
 
-        public readonly byte DarkSkinByte = 0x74;
-        public readonly byte LightSkinByte = 0x75;
+        private readonly byte DarkSkinByte = 0x74;
+        private readonly byte LightSkinByte = 0x75;
+
+        struct UnityVersionContainer
+        {
+            public byte[] RegionByteArray;
+            public int InstructionOffset;
+        }
+
+        private UnityVersionContainer FindRegionBytesByVersion(UnityBinaryVersion version) 
+        {
+            var versionContainer = new UnityVersionContainer();
+
+            if (version < UnityBinaryVersion.UNITY_2018_3_0)
+            {
+                versionContainer.RegionByteArray = RegionBytes_Pre2018_3;
+                versionContainer.InstructionOffset = JumpInstructionOffset_Pre2018_3;
+                return versionContainer;
+            }
+
+            if (version < UnityBinaryVersion.UNITY_2019_1_0)
+            {
+                versionContainer.RegionByteArray = RegionBytes_2018_3;
+                versionContainer.InstructionOffset = JumpInstructionOffset_2018_3;
+                return versionContainer;
+            }
+
+            if (version < UnityBinaryVersion.UNITY_2019_2_0)
+            {
+                versionContainer.RegionByteArray = RegionBytes_2019_0;
+                versionContainer.InstructionOffset = JumpInstructionOffset_2019_0;
+                return versionContainer;
+            }
+
+            if (version < UnityBinaryVersion.UNITY_2019_2_0)
+            {
+                versionContainer.RegionByteArray = RegionBytes_2019_0;
+                versionContainer.InstructionOffset = JumpInstructionOffset_2019_0;
+                return versionContainer;
+            }
+
+            //must be newer, will break as unity adds new versions, needs to be added to sequentially as the AOB changes
+            versionContainer.RegionByteArray = RegionBytes_2019_2;
+            versionContainer.InstructionOffset = JumpInstructionOffset_2019_2;
+            return versionContainer;
+        }
 
         public void Init()
         {
@@ -62,9 +118,13 @@ namespace UnityDarkThemePatch
                 ConsoleHelpers.MultipleChoice(choices, () => quitRequested = true);
                 if (quitRequested) { break; }
 
-                RegionBytes = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? RegionBytesVersionB : RegionBytesVersionA;
-                JumpInstructionOffset = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? JumpInstructionOffsetVersionB : JumpInstructionOffsetVersionA;
-                PatchableByteAddress = BinaryHelpers.FindJumpInstructionAddress(UnityExecutable.ExecutablePath, RegionBytes, JumpInstructionOffset);
+
+                //replace with FindRegion here
+                UnityVersionContainer currentVersion = FindRegionBytesByVersion(UnityExecutable.ExecutableVersion);
+
+                //RegionBytes = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? RegionBytes_2018_3 : RegionBytes_Pre2018_3;
+                //JumpInstructionOffset = UnityExecutable.ExecutableVersion >= UnityBinaryVersion.UNITY_2018_3_0 ? JumpInstructionOffsetVersionB : JumpInstructionOffsetVersionA;
+                PatchableByteAddress = BinaryHelpers.FindJumpInstructionAddress(UnityExecutable.ExecutablePath, currentVersion.RegionByteArray, currentVersion.InstructionOffset);
                 PatchableByteValue = GetPatchableByteValue();
                 if (PatchableByteValue == DarkSkinByte)
                 {
