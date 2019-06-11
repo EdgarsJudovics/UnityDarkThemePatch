@@ -27,7 +27,10 @@ If your registry entry for Unity.exe is wrong or nonexistent, drag Unity.exe ont
 ## SUPPORTED VERSIONS
 Windows only, 64 bit only  
 * 5.x
-* 2017.x up to 2017.3  
+* 2017
+* 2018
+* 2019 up through .2
+
 Other versions might or might not work but have not been tested
 
 `Requires .NET Framework 4.6 or higher`
