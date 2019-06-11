@@ -95,13 +95,6 @@ namespace UnityDarkThemePatch
                 return versionContainer;
             }
 
-            if (version < UnityBinaryVersion.UNITY_2019_2_0)
-            {
-                versionContainer.RegionByteArray = RegionBytes_2019_0;
-                versionContainer.InstructionOffset = JumpInstructionOffset_2019_0;
-                return versionContainer;
-            }
-
             //must be newer, will break as unity adds new versions, needs to be added to sequentially as the AOB changes
             versionContainer.RegionByteArray = RegionBytes_2019_2;
             versionContainer.InstructionOffset = JumpInstructionOffset_2019_2;
