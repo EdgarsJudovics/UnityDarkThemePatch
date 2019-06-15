@@ -1,4 +1,5 @@
 ﻿using Microsoft.Win32;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +27,9 @@ namespace UnityDarkThemePatch.Helpers
             var argPaths = GetUnityPathsFromArgs();
             var regPaths = GetUnityPathsFromRegistry();
             var localPath = GetUnityPathFromLocalDir();
-            var result = argPaths.Concat(regPaths).ToList();
+            var unityHub = GetUnityPathsFromHub();
+
+            var result = unityHub.Concat(argPaths.Concat(regPaths)).ToList();
 
             if (localPath != null)
             {
@@ -132,6 +135,18 @@ namespace UnityDarkThemePatch.Helpers
                 return Path.GetFullPath("Unity.exe");
             }
             return null;
+        }
+
+        /// <summary>
+        /// Attempts to find Unity installations from Unity Hub.
+        /// </summary>
+        /// <returns>A collection of paths to Unity.exe.</returns>
+        public static IEnumerable<string> GetUnityPathsFromHub()
+        {
+            var secondaryInstallPath = JsonConvert.DeserializeObject<string>(File.ReadAllText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "UnityHub\\secondaryInstallPath.json")));
+            if (!Directory.Exists(secondaryInstallPath)) { return new List<string>(); }
+            var installDirs = new DirectoryInfo(secondaryInstallPath).GetDirectories();
+            return installDirs.Select(f => $"{f.FullName}\\Editor\\Unity.exe").Where(f => File.Exists(f));
         }
     }
 }
