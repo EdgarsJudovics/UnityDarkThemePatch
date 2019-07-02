@@ -28,7 +28,7 @@ namespace UnityDarkThemePatch
             0x5b,
             0xc3,
         };
-        public readonly byte[] RegionBytes2018 =
+        public readonly byte[] RegionBytes2018_old =
         {
             0x75,
             0x08,
@@ -47,13 +47,34 @@ namespace UnityDarkThemePatch
             0xc4,
             0x30
         };
+        public readonly byte[] RegionBytes2018 =
+        {
+            0x04,
+            0x33,
+            0xc0,
+            0xEB,
+            0x02,
+            0x8B,
+            0x03,
+            0x48,
+            0x8B,
+            0x4C,
+            0x24,
+            0x58,
+            0x48,
+            0x33,
+            0xCC
+        };
 
         // offset from start of region to the actual instruction
         public readonly int JumpInstructionOffset2017 = 16;
-        public readonly int JumpInstructionOffset2018 = 0;
+        public readonly int JumpInstructionOffset2018 = -1;
 
-        public readonly byte DarkSkinByte = 0x74;
-        public readonly byte LightSkinByte = 0x75;
+        public readonly byte DarkSkin2017Byte = 0x74;
+        public readonly byte LightSkin2017Byte = 0x75;
+
+        public readonly byte DarkSkin2018Byte = 0x75;
+        public readonly byte LightSkin2018Byte = 0x74;
 
         public void Init()
         {
@@ -64,21 +85,26 @@ namespace UnityDarkThemePatch
             if (version == 2017)
             {
                 PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes2017, JumpInstructionOffset2017);
+                PatchableByteValue = GetPatchableByteValue();
+                if (PatchableByteValue == DarkSkin2017Byte)
+                    YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkin2017Byte));
+                else
+                    YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkin2017Byte));
             }
             else if (version == 2018)
             {
                 PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes2018, JumpInstructionOffset2018);
+                PatchableByteValue = GetPatchableByteValue();
+                if (PatchableByteValue == DarkSkin2018Byte)
+                    YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkin2018Byte));
+                else
+                    YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkin2018Byte));
             }
             else
             {
                 ExitOnInput("Please choose a right version", ConsoleColor.Red);
             }
 
-            PatchableByteValue = GetPatchableByteValue();
-            if (PatchableByteValue == DarkSkinByte)
-                YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkinByte));
-            else
-                YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkinByte));
         }
 
         #region CONSOLE METHODS
