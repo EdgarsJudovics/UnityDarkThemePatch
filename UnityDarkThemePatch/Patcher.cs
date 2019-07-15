@@ -70,11 +70,8 @@ namespace UnityDarkThemePatch
         public readonly int JumpInstructionOffset2017 = 16;
         public readonly int JumpInstructionOffset2018 = -1;
 
-        public readonly byte DarkSkin2017Byte = 0x74;
-        public readonly byte LightSkin2017Byte = 0x75;
-
-        public readonly byte DarkSkin2018Byte = 0x75;
-        public readonly byte LightSkin2018Byte = 0x74;
+        public readonly byte DarkSkinByte = 0x74;
+        public readonly byte LightSkinByte = 0x75;
 
         public void Init()
         {
@@ -86,19 +83,19 @@ namespace UnityDarkThemePatch
             {
                 PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes2017, JumpInstructionOffset2017);
                 PatchableByteValue = GetPatchableByteValue();
-                if (PatchableByteValue == DarkSkin2017Byte)
-                    YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkin2017Byte));
+                if (PatchableByteValue == DarkSkinByte)
+                    YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkinByte));
                 else
-                    YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkin2017Byte));
+                    YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkinByte));
             }
             else if (version == 2018)
             {
                 PatchableByteAddress = FindJumpInstructionAddress(UnityExecutablePath, RegionBytes2018, JumpInstructionOffset2018);
-                PatchableByteValue = GetPatchableByteValue();
-                if (PatchableByteValue == DarkSkin2018Byte)
-                    YesNoChoice("Revert to light skin?", () => PatchExecutable(LightSkin2018Byte));
+                PatchableByteValue = GetPatchable2018ByteValue();
+                if (PatchableByteValue == LightSkinByte) // new unity hack
+                    YesNoChoice("Revert to light skin?", () => PatchExecutable(DarkSkinByte));
                 else
-                    YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkin2018Byte));
+                    YesNoChoice("Apply dark skin patch?", () => PatchExecutable(LightSkinByte));
             }
             else
             {
@@ -200,6 +197,23 @@ namespace UnityDarkThemePatch
             }
             return jumpInstructionByte;
         }
+
+        private byte GetPatchable2018ByteValue()
+        {
+            Write("Patch status: ");
+            var jumpInstructionByte = ReadByteAtAddress(UnityExecutablePath, PatchableByteAddress);
+            if (jumpInstructionByte == 0x74)
+                WriteLine($"Light skin (unpatched) [0x{jumpInstructionByte:X} @ 0x{PatchableByteAddress:X}]", ConsoleColor.Blue);
+            else if (jumpInstructionByte == 0x75)
+                WriteLine($"Dark skin (patched) [0x{jumpInstructionByte:X} @ 0x{PatchableByteAddress:X}]", ConsoleColor.Green);
+            else
+            {
+                WriteLine($"Unknown status [0x{jumpInstructionByte:X} @ 0x{PatchableByteAddress:X}]", ConsoleColor.Red);
+                ExitOnInput();
+            }
+            return jumpInstructionByte;
+        }
+
         private void PatchExecutable(byte b)
         {
             try
