@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityDarkThemePatch.Helpers;
@@ -101,6 +102,18 @@ namespace UnityDarkThemePatch
             return versionContainer;
         }
 
+        private void DeleteUnityLowEffortRegistryKeyFixThatCantStopThisFreightTrainOfDarkDelivery()
+        {
+            string keyName = @"Computer/HKEY_CURRENT_USER/Software/Unity Technologies/Unity Editor 5.x/";
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(keyName, true))
+            {
+                if (key != null)
+                {                 
+                    key.DeleteValue("UserSkin_h307680651");
+                }
+            }
+        }
+
         public void Init()
         {
             while (true)
@@ -127,6 +140,8 @@ namespace UnityDarkThemePatch
                 {
                     ConsoleHelpers.YesNoChoice("Apply dark skin patch?", () => PatchExecutable(DarkSkinByte));
                 }
+
+                DeleteUnityLowEffortRegistryKeyFixThatCantStopThisFreightTrainOfDarkDelivery();
             }
         }
 
